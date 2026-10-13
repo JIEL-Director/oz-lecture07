@@ -1,0 +1,500 @@
+/* =========================================================
+   1. 디자인 토큰 — 색·간격·모서리 등을 한곳에서 관리
+   ========================================================= */
+:root {
+  /* 컬러 팔레트 (기존 브랜드 블루 #0b6fb8 유지) */
+  --color-bg: #f6f8fb;
+  --color-surface: #ffffff;
+  --color-text: #1b2430;
+  --color-muted: #5b6675;
+  --color-border: #e1e7ef;
+  --color-border-strong: #c7d2df;
+  --color-primary: #0b6fb8;
+  --color-primary-strong: #085a96;
+  --color-primary-soft: #e6f1fa;
+  --color-on-primary: #ffffff;
+  --color-danger: #d64545;
+
+  /* 타이포그래피 */
+  --font-sans: "Pretendard Variable", Pretendard, -apple-system,
+    BlinkMacSystemFont, system-ui, "Apple SD Gothic Neo", "Noto Sans KR",
+    "Malgun Gothic", sans-serif;
+  --fs-sm: 0.875rem;
+  --fs-base: 1rem;
+  --fs-lead: clamp(1.0625rem, 1rem + 0.4vw, 1.25rem);
+  --fs-h2: clamp(1.5rem, 1.25rem + 1vw, 2rem);
+  --fs-h1: clamp(2.25rem, 1.5rem + 3.5vw, 3.75rem);
+
+  /* 모서리·그림자 */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-pill: 999px;
+  --shadow-sm: 0 1px 2px rgb(16 24 40 / 0.06);
+  --shadow-md: 0 10px 28px rgb(16 24 40 / 0.1);
+
+  /* 레이아웃 */
+  --container: 72rem;
+  --header-h: 5.5rem; /* 모바일: 로고+메뉴 2줄 */
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+/* 다크 모드: 토큰만 바꾸면 전체가 따라 바뀜 */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #0f141a;
+    --color-surface: #171e27;
+    --color-text: #e6ebf1;
+    --color-muted: #9aa6b4;
+    --color-border: #26303c;
+    --color-border-strong: #364252;
+    --color-primary: #5aaef0;
+    --color-primary-strong: #82c2f5;
+    --color-primary-soft: rgb(90 174 240 / 0.14);
+    --color-on-primary: #0b1520;
+    --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+    --shadow-md: 0 10px 28px rgb(0 0 0 / 0.45);
+  }
+}
+
+/* =========================================================
+   2. 리셋 & 기본값
+   ========================================================= */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  /* 고정 헤더에 섹션 제목이 가려지지 않도록 */
+  scroll-padding-top: calc(var(--header-h) + 1rem);
+}
+
+/* 부드러운 스크롤 — 움직임 줄이기 설정을 켠 사용자는 제외 */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+body {
+  min-height: 100dvh;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: var(--fs-base);
+  line-height: 1.7;
+  word-break: keep-all; /* 한글 단어 중간 줄바꿈 방지 */
+  overflow-wrap: break-word;
+  -webkit-font-smoothing: antialiased;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+input,
+textarea,
+button {
+  font: inherit;
+  color: inherit;
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+a {
+  color: var(--color-primary);
+}
+
+/* 키보드 포커스를 명확히 */
+:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* =========================================================
+   3. 레이아웃 유틸리티
+   ========================================================= */
+.container {
+  /* 고정 1200px 대신: 화면이 좁으면 좌우 1rem 여백, 넓으면 최대 72rem */
+  width: min(100% - 2rem, var(--container));
+  margin-inline: auto;
+}
+
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -100px;
+  z-index: 100;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  text-decoration: none;
+}
+
+.skip-link:focus {
+  top: 1rem;
+}
+
+/* =========================================================
+   4. 헤더 & 내비게이션 (모바일 기본: 세로 정렬)
+   ========================================================= */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: color-mix(in srgb, var(--color-surface) 82%, transparent);
+  backdrop-filter: saturate(180%) blur(12px);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding-block: 0.75rem;
+}
+
+.logo {
+  font-size: 1.125rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.menu {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0;
+  list-style: none;
+}
+
+.menu a {
+  display: inline-block;
+  padding: 0.4rem 0.875rem; /* 손가락 터치 영역 확보 */
+  border-radius: var(--radius-pill);
+  color: var(--color-muted);
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.2s var(--ease), background-color 0.2s var(--ease);
+}
+
+.menu a:hover {
+  color: var(--color-primary);
+  background-color: var(--color-primary-soft);
+}
+
+/* =========================================================
+   5. 버튼
+   ========================================================= */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: var(--radius-pill);
+  background-color: var(--color-primary);
+  color: var(--color-on-primary);
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: background-color 0.2s var(--ease), transform 0.2s var(--ease),
+    box-shadow 0.2s var(--ease);
+}
+
+.btn:hover {
+  background-color: var(--color-primary-strong);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+/* =========================================================
+   6. 히어로(소개) — 모바일: 1단 / 태블릿 이상: 2단
+   ========================================================= */
+.hero {
+  display: grid;
+  gap: 2rem;
+  align-items: center;
+  padding-block: 3rem 4rem;
+}
+
+.eyebrow {
+  margin-bottom: 0.5rem;
+  color: var(--color-primary);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.hero h1 {
+  font-size: var(--fs-h1);
+  font-weight: 800;
+}
+
+.lead {
+  margin-block: 1rem 2rem;
+  max-width: 32ch;
+  color: var(--color-muted); /* darkgray보다 대비가 높아 읽기 쉬움 */
+  font-size: var(--fs-lead);
+}
+
+.hero__media img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+/* =========================================================
+   7. 공통 섹션
+   ========================================================= */
+.section {
+  padding-block: 3rem;
+}
+
+.section__title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  font-size: var(--fs-h2);
+  font-weight: 700;
+}
+
+/* 제목 앞 포인트 막대 */
+.section__title::before {
+  content: "";
+  width: 6px;
+  height: 1.1em;
+  border-radius: var(--radius-pill);
+  background-color: var(--color-primary);
+}
+
+/* =========================================================
+   8. 카드 그리드 — 1열 → 2열 → 4열
+   ========================================================= */
+.cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1.5rem;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.25s var(--ease), box-shadow 0.25s var(--ease),
+    border-color 0.25s var(--ease);
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-primary-soft);
+}
+
+.card h3 {
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+/* 배지가 있는 카드는 제목이 배지와 겹치지 않게 */
+.card:has(.badge) h3 {
+  padding-right: 3.5rem;
+}
+
+.card p {
+  color: var(--color-muted);
+  font-size: 0.9375rem;
+}
+
+.badge {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  padding: 0.125rem 0.625rem;
+  border-radius: var(--radius-pill);
+  background-color: var(--color-primary);
+  color: var(--color-on-primary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+/* =========================================================
+   9. 문의 폼
+   ========================================================= */
+.contact-form {
+  max-width: 40rem;
+}
+
+fieldset {
+  padding: 1.5rem;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+legend {
+  padding: 0 0.5rem;
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.field + .field {
+  margin-top: 1.25rem;
+}
+
+.field label {
+  display: block;
+  margin-bottom: 0.375rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.field input,
+.field textarea {
+  display: block;
+  width: 100%;
+  padding: 0.75rem 0.875rem;
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border-strong); /* beige → 보이는 테두리 */
+  border-radius: var(--radius-sm);
+  transition: border-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
+}
+
+.field textarea {
+  min-height: 8rem;
+  resize: vertical;
+}
+
+.field input::placeholder,
+.field textarea::placeholder {
+  color: var(--color-muted);
+  opacity: 0.7;
+}
+
+.field input:focus,
+.field textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px var(--color-primary-soft);
+}
+
+/* 사용자가 입력을 시도한 뒤에만 오류 표시 */
+.field input:user-invalid,
+.field textarea:user-invalid {
+  border-color: var(--color-danger);
+}
+
+.contact-form .btn {
+  margin-top: 1.5rem;
+}
+
+/* =========================================================
+   10. 푸터
+   ========================================================= */
+.site-footer {
+  padding-block: 2rem;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-muted);
+  text-align: center;
+}
+
+/* =========================================================
+   11. 반응형 — 모바일 퍼스트 (min-width로 점점 확장)
+   ========================================================= */
+
+/* 480px~ : 내비게이션 가로 배치 */
+@media (min-width: 30em) {
+  :root {
+    --header-h: 4rem;
+  }
+
+  .nav {
+    flex-direction: row;
+    justify-content: space-between;
+    min-height: var(--header-h);
+    padding-block: 0;
+  }
+
+  fieldset {
+    padding: 2rem;
+  }
+}
+
+/* 600px~ : 카드 2열 */
+@media (min-width: 37.5em) {
+  .cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* 768px~ : 히어로 2단 */
+@media (min-width: 48em) {
+  .hero {
+    grid-template-columns: 1.1fr 1fr;
+    gap: 3rem;
+    padding-block: 5rem 6rem;
+  }
+
+  .section {
+    padding-block: 4rem;
+  }
+}
+
+/* 1024px~ : 카드 4열 (카드가 4개라 3열이면 1개가 남음) */
+@media (min-width: 64em) {
+  .cards {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* 움직임 줄이기 설정 존중 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
